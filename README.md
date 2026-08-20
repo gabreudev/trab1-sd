@@ -61,8 +61,8 @@ trab1-sd/
 > A chave `service_role` é secreta. Ela deve permanecer somente no servidor e
 > nunca deve ser enviada ao GitHub ou incluída no cliente React.
 
-Opcionalmente, copie `client/.env.example` para `client/.env` para alterar o
-endereço da API. O valor padrão é `http://localhost:8000/api`.
+Opcionalmente, crie um arquivo `client/.env` com a variável `VITE_API_URL`
+para alterar o endereço da API. O valor padrão é `http://localhost:8000/api`.
 
 ## Instalação
 
@@ -176,3 +176,50 @@ Resultados obtidos em 20/08/2026:
 ### Painel e lista de tarefas
 
 ![Painel de tarefas](docs/screenshots/dashboard.png)
+
+## Equipe
+
+Este projeto foi desenvolvido como Trabalho 1 da disciplina de Sistemas Distribuídos pelos seguintes membros:
+
+- [gabreudev](https://github.com/gabreudev)
+- [NoletoS](https://github.com/NoletoS)
+
+## Modelo de resposta do grupo
+
+### Componentes
+**Pergunta:** Quais partes independentes existem?  
+**Resposta:** O sistema é composto por três partes principais que funcionam de forma independente e comunicam-se via rede:
+1. **Frontend (Cliente):** Uma aplicação web de página única (SPA) feita com React e Vite.
+2. **Backend (Servidor/API):** Uma API RESTful em Python usando o framework FastAPI.
+3. **Banco de Dados e Autenticação:** Serviço em nuvem gerido pelo Supabase, responsável pelo banco PostgreSQL e gestão de usuários (Auth).
+
+### Compartilhamento
+**Pergunta:** O que é compartilhado?  
+**Resposta:** 
+- **Recursos computacionais:** O servidor backend atende a múltiplas requisições simultâneas, compartilhando seu poder de processamento entre os diferentes clientes.
+- **Dados:** O banco de dados é um recurso central e compartilhado que armazena os dados do sistema. No entanto, o design do sistema garante o isolamento lógico das informações (um usuário só visualiza e edita suas próprias tarefas).
+
+### Tipo de SD
+**Pergunta:** Computação, informação, pervasivo ou combinação?  
+**Resposta:** É predominantemente um **Sistema de Informação Distribuído**. Ele foi projetado para a integração, armazenamento e gestão de dados (tarefas) através de uma arquitetura cliente-servidor tradicional, baseada na web e em comunicação via API REST.
+
+### Transparência
+**Pergunta:** O que o usuário não precisa perceber?  
+**Resposta:** 
+- **Transparência de Acesso:** O cliente React (JS) comunica-se com a API (Python) e o banco (PostgreSQL) usando protocolos padrão (HTTP/JSON), ocultando as diferenças de linguagens, representação de dados e arquitetura interna.
+- **Transparência de Localização:** O usuário final desconhece em qual servidor físico, IP ou região geográfica os serviços (API e Banco) estão sendo executados.
+- **Transparência de Concorrência:** Diversos usuários conseguem criar, editar e visualizar suas tarefas no sistema ao mesmo tempo de forma isolada, sem afetar ou perceber as ações uns dos outros.
+
+### Escalabilidade
+**Pergunta:** Como cresceria?  
+**Resposta:** 
+- **Cliente:** Os arquivos estáticos do React podem ser hospedados em uma CDN global, permitindo a entrega rápida para milhões de usuários.
+- **API (Backend):** Por ser uma API *stateless* (a sessão é validada por um token JWT e não salva na memória local do servidor), é possível escalá-la horizontalmente criando várias réplicas idênticas do backend escondidas atrás de um balanceador de carga.
+- **Banco de Dados:** Pode crescer verticalmente (mais hardware para o servidor de banco de dados) ou através de réplicas de leitura para reduzir a sobrecarga.
+
+### Falha
+**Pergunta:** O que acontece se um componente parar?  
+**Resposta:** 
+- Se a hospedagem do **Frontend** cair: Ninguém consegue abrir o site. Contudo, quem já tinha o sistema carregado na aba do navegador conseguirá utilizá-lo desde que não recarregue a página (assumindo que a API siga no ar).
+- Se a **API (Backend)** cair: O frontend continuará abrindo e tentando fazer requisições, mas falhará ao carregar as tarefas ou tentar manipulá-las, pois o serviço que se comunica com o banco não responde.
+- Se o **Supabase (Banco/Auth)** cair: O sistema inteiro fica inoperante. Novos usuários não conseguem fazer login e os que já estão logados não conseguem ler ou modificar dados, uma vez que o componente de persistência está inacessível.
