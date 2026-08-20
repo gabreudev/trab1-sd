@@ -51,8 +51,15 @@ class TestCreateTask:
             json={"title": ""},
             headers=auth_headers,
         )
-        # Empty title is allowed by backend (DB default handles it)
-        assert resp.status_code == 201
+        assert resp.status_code == 422
+
+    def test_create_task_blank_title(self, client, auth_headers):
+        resp = client.post(
+            "/api/tasks",
+            json={"title": "   "},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 422
 
     def test_create_multiple_tasks(self, client, auth_headers):
         for i in range(3):
@@ -175,15 +182,31 @@ class TestUpdateTask:
         assert data["priority"] == "baixa"
         assert data["due_date"] == "2026-06-15"
 
+    def test_update_can_clear_due_date(self, client, auth_headers):
+        created = client.post(
+            "/api/tasks",
+            json={"title": "Com prazo", "due_date": "2026-09-01"},
+            headers=auth_headers,
+        )
+        task_id = created.json()["id"]
+
+        resp = client.put(
+            f"/api/tasks/{task_id}",
+            json={"due_date": None},
+            headers=auth_headers,
+        )
+
+        assert resp.status_code == 200
+        assert resp.json()["due_date"] is None
+
     def test_update_nonexistent_task(self, client, auth_headers):
         resp = client.put(
             "/api/tasks/00000000-0000-0000-0000-000000000000",
             json={"title": "Ghost"},
             headers=auth_headers,
         )
-        assert resp.status_code == 200
-        # Returns empty — task not found
-        assert resp.json() == {}
+        assert resp.status_code == 404
+        assert resp.json()["detail"] == "Tarefa não encontrada"
 
     def test_update_without_auth(self, client):
         resp = client.put(
@@ -229,7 +252,7 @@ class TestDeleteTask:
             "/api/tasks/00000000-0000-0000-0000-000000000000",
             headers=auth_headers,
         )
-        assert resp.status_code == 204  # No content, even if not found
+        assert resp.status_code == 404
 
     def test_delete_without_auth(self, client):
         resp = client.delete("/api/tasks/some-id")
@@ -279,3 +302,37 @@ class TestTaskIsolation:
         resp = client.get("/api/tasks", headers=headers_b)
         assert len(resp.json()) == 1
         assert resp.json()[0]["title"] == "Tarefa do B"
+
+    def test_user_cannot_update_or_delete_another_users_task(self, client):
+        resp_a = client.post(
+            "/api/auth/signup",
+            json={"email": "owner@test.com", "password": "pass123"},
+        )
+        headers_a = {"Authorization": f"Bearer {resp_a.json()['access_token']}"}
+
+        resp_b = client.post(
+            "/api/auth/signup",
+            json={"email": "intruder@test.com", "password": "pass123"},
+        )
+        headers_b = {"Authorization": f"Bearer {resp_b.json()['access_token']}"}
+
+        created = client.post(
+            "/api/tasks",
+            json={"title": "Tarefa privada"},
+            headers=headers_a,
+        )
+        task_id = created.json()["id"]
+
+        update = client.put(
+            f"/api/tasks/{task_id}",
+            json={"title": "Invadida"},
+            headers=headers_b,
+        )
+        assert update.status_code == 404
+
+        delete = client.delete(f"/api/tasks/{task_id}", headers=headers_b)
+        assert delete.status_code == 404
+
+        owner_tasks = client.get("/api/tasks", headers=headers_a).json()
+        assert len(owner_tasks) == 1
+        assert owner_tasks[0]["title"] == "Tarefa privada"

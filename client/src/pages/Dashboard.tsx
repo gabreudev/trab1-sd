@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import { useAuth } from "../contexts/auth";
 import { useNavigate } from "react-router-dom";
 import * as api from "../lib/api";
 import Modal from "../components/Modal";
@@ -14,22 +14,10 @@ const PRIORITY_LABELS: Record<api.Priority, string> = {
   alta: "Alta",
 };
 
-const PRIORITY_ICONS: Record<api.Priority, string> = {
-  baixa: "🟢",
-  media: "🟡",
-  alta: "🔴",
-};
-
 const STATUS_LABELS: Record<api.Status, string> = {
   pendente: "Pendente",
   em_andamento: "Em andamento",
   concluida: "Concluída",
-};
-
-const STATUS_ICONS: Record<api.Status, string> = {
-  pendente: "⏳",
-  em_andamento: "🔄",
-  concluida: "✅",
 };
 
 // ---------------------------------------------------------------------------
@@ -65,20 +53,22 @@ export default function Dashboard() {
   // ---------------------------------------------------------------------------
   // Fetch
   // ---------------------------------------------------------------------------
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const data = await api.listTasks();
       setTasks(data);
-    } catch {
+    } catch (err: any) {
+      showToast(err.message || "Não foi possível carregar as tarefas.", "error");
       await signOut();
       navigate("/login");
     }
     setLoading(false);
-  };
+  }, [navigate, signOut]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     fetchTasks();
-  }, []);
+  }, [fetchTasks]);
 
   // ---------------------------------------------------------------------------
   // Filtered tasks
@@ -113,18 +103,26 @@ export default function Dashboard() {
   // CRUD
   // ---------------------------------------------------------------------------
   const handleCreate = async (data: api.TaskInput) => {
-    const task = await api.createTask(data);
-    setTasks((prev) => [task, ...prev]);
-    setShowCreate(false);
-    showToast("Tarefa criada com sucesso!");
+    try {
+      const task = await api.createTask(data);
+      setTasks((prev) => [task, ...prev]);
+      setShowCreate(false);
+      showToast("Tarefa criada com sucesso!");
+    } catch (err: any) {
+      showToast(err.message || "Não foi possível criar a tarefa.", "error");
+    }
   };
 
   const handleEdit = async (data: api.TaskInput) => {
     if (!editingTask) return;
-    const updated = await api.updateTask(editingTask.id, data);
-    setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? updated : t)));
-    setEditingTask(null);
-    showToast("Tarefa atualizada!");
+    try {
+      const updated = await api.updateTask(editingTask.id, data);
+      setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? updated : t)));
+      setEditingTask(null);
+      showToast("Tarefa atualizada!");
+    } catch (err: any) {
+      showToast(err.message || "Não foi possível atualizar a tarefa.", "error");
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -174,7 +172,7 @@ export default function Dashboard() {
       {/* ---- Header ---- */}
       <header className="dashboard-header">
         <div>
-          <h1>📋 Gerenciador de Tarefas</h1>
+          <h1>Gerenciador de Tarefas</h1>
           <p className="subtitle">{user?.email}</p>
         </div>
         <div className="header-actions">
@@ -212,7 +210,7 @@ export default function Dashboard() {
         <input
           type="text"
           className="search-input"
-          placeholder="🔍 Buscar tarefas..."
+          placeholder="Buscar tarefas..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -221,18 +219,18 @@ export default function Dashboard() {
           onChange={(e) => setFilterStatus(e.target.value as api.Status | "todas")}
         >
           <option value="todas">Todos os status</option>
-          <option value="pendente">⏳ Pendente</option>
-          <option value="em_andamento">🔄 Em andamento</option>
-          <option value="concluida">✅ Concluída</option>
+          <option value="pendente">Pendente</option>
+          <option value="em_andamento">Em andamento</option>
+          <option value="concluida">Concluída</option>
         </select>
         <select
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value as api.Priority | "todas")}
         >
           <option value="todas">Todas prioridades</option>
-          <option value="alta">🔴 Alta</option>
-          <option value="media">🟡 Média</option>
-          <option value="baixa">🟢 Baixa</option>
+          <option value="alta">Alta</option>
+          <option value="media">Média</option>
+          <option value="baixa">Baixa</option>
         </select>
       </div>
 
@@ -258,9 +256,10 @@ export default function Dashboard() {
                 <button
                   className={`status-toggle status-${task.status}`}
                   onClick={() => cycleStatus(task)}
-                  title="Clique para alterar status"
+                  title={`Status: ${STATUS_LABELS[task.status]}. Clique para alterar.`}
+                  aria-label={`Alterar status da tarefa. Status atual: ${STATUS_LABELS[task.status]}`}
                 >
-                  {STATUS_ICONS[task.status]}
+                  <span className="status-mark" aria-hidden="true" />
                 </button>
               </div>
 
@@ -270,7 +269,7 @@ export default function Dashboard() {
                     {task.title}
                   </h3>
                   <span className={`priority-badge priority-${task.priority}`}>
-                    {PRIORITY_ICONS[task.priority]} {PRIORITY_LABELS[task.priority]}
+                    {PRIORITY_LABELS[task.priority]}
                   </span>
                 </div>
 
@@ -283,7 +282,7 @@ export default function Dashboard() {
                     <span
                       className={`due-date ${isOverdue(task) ? "overdue" : ""}`}
                     >
-                      📅 {formatDate(task.due_date)}
+                      Prazo: {formatDate(task.due_date)}
                     </span>
                   )}
                   <span className={`status-tag status-tag-${task.status}`}>
@@ -298,14 +297,14 @@ export default function Dashboard() {
                   onClick={() => setEditingTask(task)}
                   title="Editar"
                 >
-                  ✏️
+                  Editar
                 </button>
                 <button
                   className="icon-btn icon-btn-danger"
                   onClick={() => handleDelete(task.id)}
                   title="Excluir"
                 >
-                  🗑️
+                  Excluir
                 </button>
               </div>
             </div>

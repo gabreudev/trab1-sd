@@ -1,15 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as api from "../lib/api";
-
-interface AuthState {
-  user: { id: string; email: string } | null;
-  loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error?: string }>;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthState | undefined>(undefined);
+import { AuthContext } from "./auth";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
@@ -30,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string) => {
     try {
       const data = await api.signUp(email, password);
       setUser({ id: data.user_id, email: data.email });
@@ -38,9 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e: any) {
       return { error: e.message };
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const data = await api.signIn(email, password);
       setUser({ id: data.user_id, email: data.email });
@@ -48,22 +39,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e: any) {
       return { error: e.message };
     }
-  };
+  }, []);
 
-  const signOut = async () => {
-    await api.signOut();
-    setUser(null);
-  };
+  const signOut = useCallback(async () => {
+    try {
+      await api.signOut();
+    } catch {
+      // Os tokens já são removidos pelo cliente da API mesmo se o servidor
+      // estiver indisponível ou a sessão tiver expirado.
+    } finally {
+      setUser(null);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }

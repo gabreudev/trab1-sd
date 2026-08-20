@@ -45,7 +45,7 @@ DROP TABLE IF EXISTS notes;
 CREATE TABLE IF NOT EXISTS tasks (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    title       TEXT NOT NULL DEFAULT '',
+    title       TEXT NOT NULL CHECK (length(trim(title)) > 0),
     description TEXT NOT NULL DEFAULT '',
     due_date    DATE,
     priority    TEXT NOT NULL DEFAULT 'media' CHECK (priority IN ('baixa', 'media', 'alta')),

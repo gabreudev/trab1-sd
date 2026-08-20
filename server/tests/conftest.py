@@ -208,7 +208,7 @@ class MockDeleteBuilder:
                 to_remove.append(record)
         for r in to_remove:
             self._data.remove(r)
-        return MagicMock(data=[])
+        return MagicMock(data=to_remove)
 
 
 class MockSupabaseClient:

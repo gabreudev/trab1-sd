@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type * as api from "../lib/api";
 
 interface TaskFormProps {
@@ -20,16 +20,6 @@ export default function TaskForm({
   const [priority, setPriority] = useState<api.Priority>(initialData?.priority ?? "media");
   const [status, setStatus] = useState<api.Status>(initialData?.status ?? "pendente");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (initialData) {
-      setTitle(initialData.title ?? "");
-      setDescription(initialData.description ?? "");
-      setDueDate(initialData.due_date ?? "");
-      setPriority(initialData.priority ?? "media");
-      setStatus(initialData.status ?? "pendente");
-    }
-  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +63,7 @@ export default function TaskForm({
 
       <div className="form-grid">
         <div className="form-group">
-          <label>📅 Data limite</label>
+          <label>Data limite</label>
           <input
             type="date"
             value={dueDate}
@@ -82,7 +72,7 @@ export default function TaskForm({
         </div>
 
         <div className="form-group">
-          <label>⚡ Prioridade</label>
+          <label>Prioridade</label>
           <div className="priority-options">
             {(["baixa", "media", "alta"] as const).map((p) => (
               <button
@@ -91,14 +81,14 @@ export default function TaskForm({
                 className={`priority-btn priority-btn-${p} ${priority === p ? "active" : ""}`}
                 onClick={() => setPriority(p)}
               >
-                {p === "baixa" ? "🟢 Baixa" : p === "media" ? "🟡 Média" : "🔴 Alta"}
+                {p === "baixa" ? "Baixa" : p === "media" ? "Média" : "Alta"}
               </button>
             ))}
           </div>
         </div>
 
         <div className="form-group">
-          <label>📊 Status</label>
+          <label>Status</label>
           <div className="status-options">
             {(["pendente", "em_andamento", "concluida"] as const).map((s) => (
               <button
@@ -108,10 +98,10 @@ export default function TaskForm({
                 onClick={() => setStatus(s)}
               >
                 {s === "pendente"
-                  ? "⏳ Pendente"
+                  ? "Pendente"
                   : s === "em_andamento"
-                  ? "🔄 Em andamento"
-                  : "✅ Concluída"}
+                  ? "Em andamento"
+                  : "Concluída"}
               </button>
             ))}
           </div>
