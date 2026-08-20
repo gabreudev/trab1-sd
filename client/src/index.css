@@ -1,24 +1,24 @@
 :root {
-  --bg: #0a0a0f;
-  --surface: #12121a;
-  --surface-2: #1a1a2e;
-  --surface-3: #222240;
-  --primary: #6c63ff;
-  --primary-hover: #5a52d5;
-  --primary-light: rgba(108, 99, 255, 0.15);
-  --text: #eee;
-  --text-dim: #888;
-  --text-muted: #555;
+  --bg: #100f0c;
+  --surface: #181611;
+  --surface-2: #211e17;
+  --surface-3: #2d281e;
+  --primary: #f5a623;
+  --primary-hover: #dd8910;
+  --primary-light: rgba(245, 166, 35, 0.14);
+  --text: #f4f1e9;
+  --text-dim: #aaa397;
+  --text-muted: #706a5f;
   --danger: #e74c3c;
   --danger-light: rgba(231, 76, 60, 0.15);
   --success: #27ae60;
   --success-light: rgba(39, 174, 96, 0.15);
-  --warning: #f39c12;
-  --warning-light: rgba(243, 156, 18, 0.15);
-  --border: #2a2a3a;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --warning: #e9aa3a;
+  --warning-light: rgba(233, 170, 58, 0.14);
+  --border: #343027;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow: 0 16px 44px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -28,7 +28,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -47,7 +47,7 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+  background: var(--bg);
 }
 
 .auth-card {
@@ -61,6 +61,7 @@ body {
   gap: 1.5rem;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--primary);
 }
 
 .auth-card h1 {
@@ -92,7 +93,7 @@ body {
 .auth-card button[type="submit"] {
   padding: 0.85rem;
   background: var(--primary);
-  color: #fff;
+  color: #18130a;
   border: none;
   border-radius: var(--radius-sm);
   font-size: 1rem;
@@ -255,6 +256,9 @@ body {
 
 .dashboard-header h1 {
   font-size: 1.6rem;
+  letter-spacing: -0.03em;
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--primary);
 }
 
 .subtitle {
@@ -273,7 +277,7 @@ body {
 .btn-primary {
   padding: 0.65rem 1.25rem;
   background: var(--primary);
-  color: #fff;
+  color: #18130a;
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
@@ -346,6 +350,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  border-top: 2px solid transparent;
 }
 
 .stat-number {
@@ -361,6 +366,7 @@ body {
 }
 
 .stat-pendente .stat-number { color: var(--text-dim); }
+.stat-andamento { border-top-color: var(--primary); }
 .stat-andamento .stat-number { color: var(--primary); }
 .stat-concluida .stat-number { color: var(--success); }
 
@@ -553,7 +559,7 @@ body {
 }
 
 .task-card:hover {
-  border-color: var(--surface-3);
+  border-color: #514936;
 }
 
 .task-card.task-done {
@@ -576,7 +582,7 @@ body {
   border-radius: 50%;
   border: 2px solid var(--border);
   background: var(--bg);
-  font-size: 1rem;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -594,11 +600,36 @@ body {
 
 .status-toggle.status-em_andamento {
   border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
 }
 
 .status-toggle.status-concluida {
   border-color: var(--success);
   background: var(--success-light);
+}
+
+.status-mark {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.status-em_andamento .status-mark {
+  background: currentColor;
+  border-color: currentColor;
+}
+
+.status-concluida .status-mark {
+  width: 12px;
+  height: 7px;
+  border: 0;
+  border-left: 2px solid var(--success);
+  border-bottom: 2px solid var(--success);
+  border-radius: 0;
+  transform: rotate(-45deg) translateY(-1px);
 }
 
 /* ---- Content ---- */
@@ -657,6 +688,17 @@ body {
   border-radius: 20px;
   font-weight: 600;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.priority-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .priority-badge.priority-alta {
@@ -699,18 +741,20 @@ body {
 /* ---- Actions ---- */
 .task-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.3rem;
   flex-shrink: 0;
 }
 
 .icon-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
+  min-height: 30px;
+  padding: 0 0.55rem;
+  border: 1px solid transparent;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.9rem;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -720,10 +764,14 @@ body {
 
 .icon-btn:hover {
   background: var(--surface-3);
+  border-color: var(--border);
+  color: var(--text);
 }
 
 .icon-btn-danger:hover {
   background: var(--danger-light);
+  border-color: rgba(231, 76, 60, 0.35);
+  color: var(--danger);
 }
 
 /* ===========================================================================
